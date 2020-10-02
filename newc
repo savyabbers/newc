@@ -1,0 +1,114 @@
+#!/bin/bash
+
+##
+##  Script to layout a basic c binary program project
+##
+
+if [[ $# -lt 1 ]]; then
+    echo "First argument is project name"
+    exit 0
+fi
+
+#folder layout
+mkdir $1
+mkdir -p $1/src/include 
+mkdir $1/doc/
+mkdir $1/res/
+mkdir $1/build/
+mkdir $1/obj/
+
+#basic main.c file with doxygen code
+echo '''#include <stdio.h>
+#include "include/add.h"
+
+/** @file main.c
+ * @brief the main file for project
+ */
+
+int main(void){
+    int x = 5, y = 4, result;
+    result = add(4, 5);
+    printf("%d+%d=%d\n", x, y, result);
+    return 0;
+}
+''' > $1/src/main.c
+
+#basic add.c for example
+echo '''#include "include/add.h"
+
+/** @file add.c
+ * @brief The implementations for add.c functions
+ */
+
+/** @fn int add(int x, int y)
+ * @brief adds x and y
+ * @param x Frist int
+ * @param y Second int
+ * @returns x + y
+ * */
+int add(int x, int y){
+    return x + y;
+}
+''' > $1/src/add.c
+
+#basic header to complement the add.c file
+echo '''#ifndef _ADD_H_
+#define _ADD_H_
+
+int add(int x, int y);
+
+#endif
+''' > $1/src/include/add.h
+
+#basic makefile
+echo '''CC=gcc
+CFLAGS= -Werror -Wall -std=c11
+CRELEASE= -O3
+CDEBUG= -O0 -ggdb
+OBJS:=$(addsuffix .o, $(notdir $(basename $(wildcard src/*.c))))
+
+all: debug
+run: debug
+	./build/debug/main_gdb
+
+debug: build/debug/main_gdb
+release: build/release/main
+
+build/release/main:$(addprefix obj/,$(OBJS)) | build/release
+	$(CC) $(CFLAGS) $(CRELEASE) $(addprefix obj/,$(OBJS)) -o build/release/main
+
+build/debug/main_gdb:$(addprefix obj/,$(OBJS)) | build/debug
+	$(CC) $(CFLAGS) $(CDEBUG) $(addprefix obj/,$(OBJS)) -o build/debug/main_gdb
+
+#obj files
+obj/%.o:src/%.c src/include/%.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+#special case for main.c as it doesnt normally have a header file
+obj/main.o:src/main.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: clean
+clean:
+	rm -rvf build/*
+	rm -vf obj/*.o
+
+build/release:
+	mkdir -p build/release
+
+build/debug:
+	mkdir -p build/debug
+
+doc:Doxyfile
+	doxygen Doxyfile
+''' > $1/Makefile
+
+#doxygen set up
+echo """##doxygen setup
+OUTPUT_DIRECTORY = doc/
+PROJECT_NAME = $1
+INPUT = src/
+GENERATE_LATEX = no
+""" > $1/Doxyfile
+
+echo "$1/ Made"
