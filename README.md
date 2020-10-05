@@ -1,7 +1,7 @@
 # newc
 A shell script that will layout a basic C project directory with the appropriate makefile.
 
-## Depenincies
+## Dependencies
 This script relies on a GNU C compiler to build.
 If you want to make docs then it relies on Doxygen.
 
