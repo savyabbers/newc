@@ -88,7 +88,7 @@ obj/%.o:src/%.c src/include/%.h
 obj/main.o:src/main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean
+.PHONY: clean doc
 clean:
 	rm -rvf build/*
 	rm -vf obj/*.o
